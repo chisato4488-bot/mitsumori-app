@@ -7,101 +7,95 @@
 <title>材料取り都合・見積り計算</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:10px;font-family:Meiryo,"Yu Gothic",sans-serif;background:#edf2f7;color:#243447;font-size:13px}
-main{max-width:1200px;margin:auto}
-h1{font-size:22px;margin:0 0 8px;color:#20588a}
-h2{font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #d5dfeb}
-p{margin:5px 0}
-.panels{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-section{background:white;border:1px solid #dbe3ec;border-radius:9px;padding:12px;margin-bottom:10px;min-width:0}
-.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-label{display:block;font-weight:bold;font-size:12px;min-width:0}
-input,select{width:100%;min-width:0;padding:8px;margin-top:4px;border:1px solid #b7c5d5;border-radius:5px;font-size:15px;background:#fff}
-input:focus,select:focus{outline:2px solid #7db6ed}
-.price-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+body{margin:0;padding:8px;font-family:Meiryo,"Yu Gothic",sans-serif;background:#f1f4f8;color:#263445;font-size:13px}
+main{max-width:1100px;margin:auto}
+h1{font-size:21px;color:#20588a;margin:0 0 8px}
+h2{font-size:14px;margin:0 0 9px;padding-bottom:6px;border-bottom:1px solid #d7e0e9}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+section{background:white;border:1px solid #dce3eb;border-radius:7px;padding:10px;margin-bottom:8px;min-width:0}
+.product-layout{display:grid;grid-template-columns:155px 1fr;gap:12px}
+.product-fields{display:grid;grid-template-columns:1fr;gap:6px}
+label{display:block;font-size:12px;font-weight:bold;min-width:0}
+input,select{display:block;width:100%;max-width:100%;height:29px;padding:4px 6px;margin-top:3px;border:1px solid #aebdce;border-radius:4px;background:white;font-size:13px}
+input:focus,select:focus{outline:2px solid #9bc8ef}
+.qty-area{display:flex;flex-direction:column;justify-content:center;gap:8px}
+.qty-area input{max-width:140px}
+.price-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 #manualLabel[hidden]{display:none}
-.results{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.result{border:1px solid #d9e5f0;border-radius:7px;padding:9px;min-width:0;overflow-wrap:anywhere}
-.result h3{font-size:13px;margin:0 0 5px}
-.formula{font-family:monospace;background:#f3f6f9;padding:7px;border-radius:4px;line-height:1.55;overflow-wrap:anywhere}
-.big{font-size:22px;font-weight:bold;color:#17643e}
-.primary{background:#e8f4ff;border-color:#a9cdec}
-.note{font-size:11px;color:#596777;line-height:1.5}
-@media(min-width:900px){
-body{padding:12px}
-.panels section{margin-bottom:8px}
-}
-@media(max-width:650px){
+.results-table{width:100%;border-collapse:collapse;font-size:13px}
+.results-table th,.results-table td{padding:7px 9px;border:1px solid #d8e0e9;text-align:left;vertical-align:top}
+.results-table th{background:#edf2f7;width:27%;font-weight:600}
+.results-table .formula{font-size:11px;color:#566578;font-weight:normal;line-height:1.5;margin-top:3px;overflow-wrap:anywhere}
+.results-table .highlight td,.results-table .highlight th{background:#e6f3ff}
+.amount{font-size:19px;font-weight:bold;color:#17643e}
+.notice{font-size:11px;color:#5c6876;line-height:1.5;margin:6px 0}
+.error{color:#b42318;padding:10px}
+@media(max-width:620px){
+body{padding:7px}
 .panels{grid-template-columns:1fr}
+.product-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .price-fields{grid-template-columns:1fr 1fr}
-.results{grid-template-columns:1fr}
-}
-@media(min-width:651px) and (max-height:850px){
-body{padding:6px;font-size:12px}
-h1{font-size:19px;margin-bottom:5px}
-section{padding:8px;margin-bottom:6px}
-h2{margin-bottom:6px}
-input,select{padding:6px;font-size:14px}
-.result{padding:7px}
-.big{font-size:19px}
-.note{font-size:10px}
+.results-table th,.results-table td{padding:6px;font-size:12px}
+.results-table th{width:32%}
 }
 </style>
 </head>
 <body>
 <main>
 <h1>材料取り都合・見積り計算</h1>
-<p class="note">寸法はmm、金額は円です。入力内容は自動計算されます。</p>
 
 <div class="panels">
 <section>
-<h2>1. 製品と注文数量</h2>
-<div class="fields">
-<label>製品の厚み (mm)<input id="thick" type="number" min="0.01" step="any" value="5"></label>
-<label>製品の幅 (mm)<input id="width" type="number" min="0.01" step="any" value="70"></label>
-<label>製品の長さ (mm)<input id="length" type="number" min="0.01" step="any" value="150"></label>
+<h2>1. 製品寸法・注文数量</h2>
+<div class="product-layout">
+<div class="product-fields">
+<label>製品厚み (mm)<input id="thick" type="number" min="0.01" step="any" value="5"></label>
+<label>製品幅 (mm)<input id="width" type="number" min="0.01" step="any" value="70"></label>
+<label>製品長さ (mm)<input id="length" type="number" min="0.01" step="any" value="150"></label>
+</div>
+<div class="qty-area">
 <label>注文枚数 (枚)<input id="qty" type="number" min="1" step="1" value="1000"></label>
+<p class="notice">製品寸法は縦1列にまとめています。</p>
+</div>
 </div>
 </section>
 
 <section>
 <h2>2. シート寸法</h2>
-<div class="fields">
-<label>シートの幅 (mm)<input id="sheetW" type="number" min="0.01" step="any" value="1000"></label>
-<label>シートの長さ (mm)<input id="sheetL" type="number" min="0.01" step="any" value="2000"></label>
+<div class="product-fields">
+<label>シート幅 (mm)<input id="sheetW" type="number" min="0.01" step="any" value="1000"></label>
+<label>シート長さ (mm)<input id="sheetL" type="number" min="0.01" step="any" value="2000"></label>
 </div>
-<p class="note">カット代・隙間は計算に含めません。</p>
 </section>
 </div>
 
 <section>
 <h2>3. シート単価</h2>
 <div class="price-fields">
-<label>単価の計算方法
+<label>単価計算方法
 <select id="priceMode">
 <option value="ratio">厚みに比例</option>
-<option value="manual">希望厚みの単価を直接入力</option>
+<option value="manual">単価を直接入力</option>
 </select></label>
 <label>基準厚み (mm)<input id="baseThick" type="number" min="0.01" step="any" value="10"></label>
-<label>基準厚みのシート単価 (円)<input id="basePrice" type="number" min="0" step="any" value="2000"></label>
+<label>基準シート単価 (円)<input id="basePrice" type="number" min="0" step="any" value="2000"></label>
 <label id="manualLabel" hidden>希望厚みのシート単価 (円)<input id="manualPrice" type="number" min="0" step="any" value="1000"></label>
 </div>
-<p class="note">初期単価は説明用です。実際の価格を入力してください。</p>
+<p class="notice">初期単価は仮の金額です。実際の価格を入力してください。</p>
 </section>
 
 <section>
-<h2>4. 計算結果・計算式</h2>
-<div id="results" class="results"></div>
+<h2>4. 計算結果</h2>
+<div id="results"></div>
 </section>
-<p class="note">材料費のみの計算です。加工費・運賃・利益などは含みません。取り都合は縦横2パターンの比較です。</p>
+<p class="notice">※取り都合は縦横2パターンの比較です。混在配置、加工費、運賃、利益は含みません。</p>
 </main>
 
 <script>
 const ids=["thick","width","length","qty","sheetW","sheetL","priceMode","baseThick","basePrice","manualPrice"];
 ids.forEach(id=>document.getElementById(id).addEventListener("input",calculate));
 document.getElementById("priceMode").addEventListener("change",()=>{
- document.getElementById("manualLabel").hidden=
- document.getElementById("priceMode").value!=="manual";
+ document.getElementById("manualLabel").hidden=document.getElementById("priceMode").value!=="manual";
  calculate();
 });
 function fmt(n){return Number(n).toLocaleString("ja-JP",{maximumFractionDigits:4});}
@@ -111,55 +105,35 @@ function calculate(){
  const sw=v("sheetW"),sl=v("sheetL"),bt=v("baseThick"),bp=v("basePrice"),mp=v("manualPrice");
  const mode=document.getElementById("priceMode").value;
  const out=document.getElementById("results");
- const vals=[t,w,l,q,sw,sl,bt,bp];
- if(vals.some(x=>!Number.isFinite(x))||t<=0||w<=0||l<=0||q<=0||!Number.isInteger(q)||sw<=0||sl<=0||bt<=0||bp<0||(mode==="manual"&&(!Number.isFinite(mp)||mp<0))){
- out.innerHTML='<div class="result">入力値を確認してください。寸法・注文枚数・基準厚みを正しく入力してください。</div>';
+ if([t,w,l,q,sw,sl,bt,bp].some(x=>!Number.isFinite(x))||
+ t<=0||w<=0||l<=0||q<=0||!Number.isInteger(q)||sw<=0||sl<=0||bt<=0||bp<0||
+ (mode==="manual"&&(!Number.isFinite(mp)||mp<0))){
+ out.innerHTML='<p class="error">入力値を確認してください。寸法、注文枚数、単価を正しく入力してください。</p>';
  return;
  }
- const nAw=Math.floor(sw/w),nAl=Math.floor(sl/l);
- const nBw=Math.floor(sw/l),nBl=Math.floor(sl/w);
- const a=nAw*nAl,b=nBw*nBl,each=Math.max(a,b);
+ const aw=Math.floor(sw/w),al=Math.floor(sl/l);
+ const bw=Math.floor(sw/l),bl=Math.floor(sl/w);
+ const a=aw*al,b=bw*bl,each=Math.max(a,b);
  if(each<1){
- out.innerHTML='<div class="result">製品がシートに収まりません。製品寸法とシート寸法を確認してください。</div>';
+ out.innerHTML='<p class="error">製品がシートに収まりません。寸法を確認してください。</p>';
  return;
  }
  const sheets=Math.ceil(q/each);
  const unit=mode==="ratio"?bp*t/bt:mp;
  const total=sheets*unit,per=total/q;
  const chosen=a>=b?"配置A":"配置B";
- const money=n=>fmt(n)+"円";
+ const yen=n=>fmt(n)+" 円";
  out.innerHTML=`
- <div class="result">
- <h3>配置A：製品を回転せずに配置</h3>
- <div class="formula">⌊${fmt(sw)} ÷ ${fmt(w)}⌋ × ⌊${fmt(sl)} ÷ ${fmt(l)}⌋<br>= ${fmt(nAw)} × ${fmt(nAl)}<br>= <b>${fmt(a)}枚／シート</b></div>
- </div>
- <div class="result">
- <h3>配置B：製品を90度回転</h3>
- <div class="formula">⌊${fmt(sw)} ÷ ${fmt(l)}⌋ × ⌊${fmt(sl)} ÷ ${fmt(w)}⌋<br>= ${fmt(nBw)} × ${fmt(nBl)}<br>= <b>${fmt(b)}枚／シート</b></div>
- </div>
- <div class="result primary">
- <h3>採用する取り都合：${chosen}</h3>
- <div class="big">${fmt(each)}枚／シート</div>
- <p class="note">2パターンのうち多く取れる方を採用します。</p>
- </div>
- <div class="result primary">
- <h3>必要シート枚数</h3>
- <div class="formula">⌈${fmt(q)} ÷ ${fmt(each)}⌉<br>= ⌈${fmt(q/each)}⌉</div>
- <div class="big">${fmt(sheets)}枚</div>
- <p>生産可能数：${fmt(sheets*each)}枚</p>
- </div>
- <div class="result">
- <h3>希望厚みのシート単価</h3>
- <div class="formula">${mode==="ratio"?money(bp)+" × "+fmt(t)+"mm ÷ "+fmt(bt)+"mm": "希望厚みの単価を直接入力"}<br>= <b>${money(unit)}／シート</b></div>
- </div>
- <div class="result primary">
- <h3>材料費合計</h3>
- <div class="formula">${fmt(sheets)}枚 × ${money(unit)}<br>=</div>
- <div class="big">${money(total)}</div>
- <h3>製品1枚当たりの材料費</h3>
- <div class="formula">${money(total)} ÷ ${fmt(q)}枚 =</div>
- <div class="big">${money(per)}／枚</div>
- </div>`;
+ <table class="results-table">
+ <tr><th>項目</th><th>計算結果・計算式</th></tr>
+ <tr><th>配置A</th><td><b>${fmt(a)} 枚／シート</b><div class="formula">⌊${fmt(sw)}÷${fmt(w)}⌋ × ⌊${fmt(sl)}÷${fmt(l)}⌋ = ${fmt(aw)}×${fmt(al)} = ${fmt(a)}</div></td></tr>
+ <tr><th>配置B（90度回転）</th><td><b>${fmt(b)} 枚／シート</b><div class="formula">⌊${fmt(sw)}÷${fmt(l)}⌋ × ⌊${fmt(sl)}÷${fmt(w)}⌋ = ${fmt(bw)}×${fmt(bl)} = ${fmt(b)}</div></td></tr>
+ <tr class="highlight"><th>採用する取り都合</th><td><b>${chosen}：${fmt(each)} 枚／シート</b></td></tr>
+ <tr class="highlight"><th>必要シート枚数</th><td><span class="amount">${fmt(sheets)} 枚</span><div class="formula">注文枚数 ${fmt(q)} ÷ ${fmt(each)} 枚／シート = ${fmt(q/each)} → 端数切り上げ</div><div class="formula">生産可能数：${fmt(sheets*each)} 枚</div></td></tr>
+ <tr><th>希望厚みの単価</th><td><b>${yen(unit)}／シート</b><div class="formula">${mode==="ratio"?yen(bp)+" × "+fmt(t)+" ÷ "+fmt(bt)+" = "+yen(unit):"入力した単価："+yen(mp)}</div></td></tr>
+ <tr class="highlight"><th>材料費合計</th><td><span class="amount">${yen(total)}</span><div class="formula">必要シート ${fmt(sheets)} 枚 × ${yen(unit)}／シート</div></td></tr>
+ <tr class="highlight"><th>製品1枚当たり</th><td><span class="amount">${yen(per)}／枚</span><div class="formula">材料費合計 ${yen(total)} ÷ 注文枚数 ${fmt(q)} 枚</div></td></tr>
+ </table>`;
 }
 calculate();
 </script>
