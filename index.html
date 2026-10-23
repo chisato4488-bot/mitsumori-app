@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>見積り計算アプリ</title>
+<style>
+body{font-family:Arial,"Meiryo",sans-serif;background:#f4f7fb;color:#263445;margin:0;padding:16px}
+main{max-width:850px;margin:auto}
+h1{color:#245c91;font-size:25px}
+h2{font-size:18px;border-bottom:1px solid #d9e2ec;padding-bottom:8px}
+section{background:white;padding:16px;border-radius:12px;margin:14px 0;box-shadow:0 2px 8px #0000000c}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:14px;font-weight:bold}
+input,select{box-sizing:border-box;width:100%;padding:10px;margin-top:5px;border:1px solid #b8c6d6;border-radius:7px;font-size:16px}
+button{background:#2468a2;color:white;border:0;padding:12px 18px;border-radius:8px;font-size:16px;cursor:pointer}
+.result{background:#eaf5ff;padding:12px;border-radius:8px;margin:8px 0;overflow-wrap:anywhere}
+.big{font-size:26px;font-weight:bold;color:#12623b}
+.formula{font-family:monospace;white-space:normal;overflow-wrap:anywhere;background:#f3f5f7;padding:10px;border-radius:6px;line-height:1.8}
+.note{font-size:13px;color:#5b6572;line-height:1.7}
+@media(max-width:520px){.grid{grid-template-columns:1fr}body{padding:9px}}
+</style>
+</head>
+<body>
+<main>
+<h1>材料取り都合・見積り計算</h1>
+<p class="note">寸法と単価を入力すると、自動で計算します。寸法はmm、金額は円で入力してください。</p>
+
+<section>
+<h2>1. 製品と注文数量</h2>
+<div class="grid">
+<label>製品の厚み (mm)<input id="thick" type="number" min="0.01" step="any" value="5"></label>
+<label>製品の幅 (mm)<input id="width" type="number" min="0.01" step="any" value="70"></label>
+<label>製品の長さ (mm)<input id="length" type="number" min="0.01" step="any" value="150"></label>
+<label>注文枚数 (枚)<input id="qty" type="number" min="1" step="1" value="1000"></label>
+</div>
+</section>
+
+<section>
+<h2>2. シート寸法</h2>
+<div class="grid">
+<label>シートの幅 (mm)<input id="sheetW" type="number" min="0.01" step="any" value="1000"></label>
+<label>シートの長さ (mm)<input id="sheetL" type="number" min="0.01" step="any" value="2000"></label>
+<label>カット代・隙間 (mm)<input id="gap" type="number" min="0" step="any" value="0"></label>
+</div>
+<p class="note">カット代は隣り合う製品の間に必要な幅です。0なら隙間なしで計算します。外周の余白は別途考慮してください。</p>
+</section>
+
+<section>
+<h2>3. シート単価</h2>
+<label>単価の計算方法
+<select id="priceMode">
+<option value="ratio">厚みに比例させる</option>
+<option value="manual">希望厚みの単価を直接入力</option>
+</select></label>
+<div class="grid" style="margin-top:12px">
+<label>基準厚み (mm)<input id="baseThick" type="number" min="0.01" step="any" value="10"></label>
+<label>基準厚みのシート単価 (円)<input id="basePrice" type="number" min="0" step="any" value="2000"></label>
+<label id="manualLabel" style="display:none">希望厚みのシート単価 (円)<input id="manualPrice" type="number" min="0" step="any" value="1000"></label>
+</div>
+<p class="note">初期設定は説明用の仮価格2,000円です。実際の仕入単価に変更してください。</p>
+</section>
+
+<section>
+<h2>4. 計算結果</h2>
+<div id="results">入力内容を確認しています…</div>
+</section>
+<button onclick="calculate()">再計算する</button>
+<p class="note">入力を変更すると自動計算します。見積り結果は材料費の計算であり、加工費・運賃・利益などは含みません。</p>
+</main>
+
+<script>
+const ids=["thick","width","length","qty","sheetW","sheetL","gap","priceMode","baseThick","basePrice","manualPrice"];
+ids.forEach(id=>document.getElementById(id).addEventListener("input",calculate));
+document.getElementById("priceMode").addEventListener("change",()=>{
+ document.getElementById("manualLabel").style.display=
+ document.getElementById("priceMode").value==="manual"?"block":"none";
+ calculate();
+});
+
+function fmt(n){
+ return Number(n).toLocaleString("ja-JP",{maximumFractionDigits:4});
+}
+function calculate(){
+ const t=Number(document.getElementById("thick").value);
+ const w=Number(document.getElementById("width").value);
+ const l=Number(document.getElementById("length").value);
+ const q=Number(document.getElementById("qty").value);
+ const sw=Number(document.getElementById("sheetW").value);
+ const sl=Number(document.getElementById("sheetL").value);
+ const g=Number(document.getElementById("gap").value);
+ const bt=Number(document.getElementById("baseThick").value);
+ const bp=Number(document.getElementById("basePrice").value);
+ const mode=document.getElementById("priceMode").value;
+ const mp=Number(document.getElementById("manualPrice").value);
+ const out=document.getElementById("results");
+
+ if([t,w,l,q,sw,sl,g,bt,bp].some(v=>!Number.isFinite(v))||
+ t<=0||w<=0||l<=0||q<=0||!Number.isInteger(q)||
+ sw<=0||sl<=0||g<0||bt<=0||bp<0||(mode==="manual"&&(!Number.isFinite(mp)||mp<0))){
+ out.innerHTML='<p style="color:#b42318">入力値を確認してください。寸法・注文枚数・基準厚みは0より大きい数値を入力してください。</p>';
+ return;
+ }
+ const a1=Math.floor((sw+g)/(w+g))*Math.floor((sl+g)/(l+g));
+ const a2=Math.floor((sw+g)/(l+g))*Math.floor((sl+g)/(w+g));
+ const chosen=Math.max(a1,a2);
+ const best=a1>=a2?"配置A（幅×長さ）":"配置B（90度回転）";
+ const ns=chosen>0?Math.ceil(q/chosen):0;
+ let unit=mode==="ratio"?bp*t/bt:mp;
+ const priceFormula=mode==="ratio"
+ ?`基準単価 ${fmt(bp)}円 × 製品厚み ${fmt(t)}mm ÷ 基準厚み ${fmt(bt)}mm`
+ :`希望厚みのシート単価を直接入力：${fmt(mp)}円`;
+ if(chosen===0){
+ out.innerHTML='<p style="color:#b42318">製品寸法がシートに収まりません。寸法を確認してください。</p>';
+ return;
+ }
+ const total=ns*unit;
+ const perPiece=total/q;
+ out.innerHTML=`
+ <div class="result"><b>配置A：幅方向に製品幅、長さ方向に製品長さ</b><div class="formula">⌊(${fmt(sw)}+${fmt(g)})÷(${fmt(w)}+${fmt(g)})⌋ × ⌊(${fmt(sl)}+${fmt(g)})÷(${fmt(l)}+${fmt(g)})⌋<br>= ${Math.floor((sw+g)/(w+g))} × ${Math.floor((sl+g)/(l+g))} = <b>${fmt(a1)}枚／シート</b></div></div>
+ <div class="result"><b>配置B：製品を90度回転</b><div class="formula">⌊(${fmt(sw)}+${fmt(g)})÷(${fmt(l)}+${fmt(g)})⌋ × ⌊(${fmt(sl)}+${fmt(g)})÷(${fmt(w)}+${fmt(g)})⌋<br>= ${Math.floor((sw+g)/(l+g))} × ${Math.floor((sl+g)/(w+g))} = <b>${fmt(a2)}枚／シート</b></div></div>
+ <div class="result">採用する配置：<b>${best}</b><br>1シートから取れる枚数：<span class="big">${fmt(chosen)}枚</span></div>
+ <div class="result"><b>必要シート枚数</b><div class="formula">⌈注文枚数 ${fmt(q)} ÷ 取り都合 ${fmt(chosen)}⌉ = ⌈${fmt(q/chosen)}⌉ =</div><span class="big">${fmt(ns)}枚</span><br>製品の生産可能数：${fmt(ns*chosen)}枚</div>
+ <div class="result"><b>希望厚みのシート単価</b><div class="formula">${priceFormula}<br>= <b>${fmt(unit)}円／シート</b></div></div>
+ <div class="result"><b>材料費合計</b><div class="formula">必要シート ${fmt(ns)}枚 × シート単価 ${fmt(unit)}円 =</div><span class="big">${fmt(total)}円</span></div>
+ <div class="result"><b>製品1枚当たりの材料費</b><div class="formula">材料費合計 ${fmt(total)}円 ÷ 注文枚数 ${fmt(q)}枚 =</div><span class="big">${fmt(perPiece)}円／枚</span></div>
+ <p class="note">注意：比較しているのは、製品を同じ向きで並べる2パターンです。向きを混ぜた配置は探索していません。材料の外周余白や加工条件は別途確認してください。</p>`;
+}
+calculate();
+</script>
+</body>
+</html>
